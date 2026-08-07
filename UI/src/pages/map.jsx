@@ -161,6 +161,7 @@ out center;
   }, []);
 
   useEffect(() => {
+    console.log("useEffect Started");
     if (locationRequestedRef.current) {
       return;
     }
@@ -174,57 +175,52 @@ out center;
       setLocationName("Using default location");
       return undefined;
     }
+     console.log("useEffect Started");
+  navigator.geolocation.getCurrentPosition(
+  async (position) => {
+    const latitude = position.coords.latitude;
+    const longitude = position.coords.longitude;
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        if (cancelled) {
-          return;
-        }
+    console.log("Latitude:", latitude);
+    console.log("Longitude:", longitude);
 
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
+    setUserLocation({
+      latitude,
+      longitude,
+    });
 
-        setUserLocation({
-          latitude,
-          longitude,
-        });
+    try {
+      const geoRes = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+      );
 
-        try {
-          const geoRes = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
-            {
-              headers: {
-                Accept: "application/json",
-              },
-            },
-          );
+      const geoData = await geoRes.json();
 
-          const geoData = await geoRes.json();
+      console.log("Reverse Geo:", geoData);
 
-          if (!cancelled) {
-            setLocationName(
-              geoData.address?.suburb ||
-                geoData.address?.city ||
-                geoData.address?.town ||
-                geoData.address?.village ||
-                "My Location",
-            );
-          }
-        } catch (err) {
-          console.log(err);
-          if (!cancelled) {
-            setLocationName("My Location");
-          }
-        }
-      },
-      (err) => {
-        console.log(err);
-        if (!cancelled) {
-          setUserLocation(fallbackLocation);
-          setLocationName("Using default location");
-        }
-      },
-    );
+      setLocationName(
+        geoData.address?.suburb ||
+          geoData.address?.city ||
+          geoData.address?.town ||
+          geoData.address?.village ||
+          "My Location"
+      );
+    } catch (err) {
+      console.log(err);
+      setLocationName("My Location");
+    }
+  },
+  (err) => {
+    console.log("Geolocation Error:", err);
+    setUserLocation(fallbackLocation);
+    setLocationName("Using default location");
+  },
+  {
+    enableHighAccuracy: true,
+    timeout: 10000,
+    maximumAge: 0,
+  }
+);
 
     return () => {
       cancelled = true;
@@ -359,7 +355,8 @@ out center;
   }, [filteredBusinesses, selectedBusiness]);
 
   return (
-    <>
+    <> 
+    
       <Navbar />
       <MapHero
         search={search}

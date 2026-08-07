@@ -35,43 +35,61 @@ function MapSidebar({
         <MapPin className="text-green-500" />
       </div>
 
-      <div className="flex justify-between mt-4">
-        <div className="flex justify-between mt-4">
-          <button
-            onClick={() => setCategory("All")}
-            className={`px-4 py-2 rounded-xl ${
-              category === "All" ? "bg-green-500 text-white" : "bg-gray-100"
-            }`}
-          >
-            All
-          </button>
+      <div className="flex gap-2 mt-4 flex-wrap">
+        <button
+          onClick={() => setCategory("All")}
+          className={`px-4 py-2 rounded-xl ${
+            category === "All" ? "bg-green-500 text-white" : "bg-gray-100"
+          }`}
+        >
+          All
+        </button>
 
-          <button
-            onClick={() => setCategory("Businesses")}
-            className={`px-4 py-2 rounded-xl ${
-              category === "Businesses"
-                ? "bg-green-500 text-white"
-                : "bg-gray-100"
-            }`}
-          >
-            Businesses
-          </button>
+        <button
+          onClick={() => setCategory("Businesses")}
+          className={`px-4 py-2 rounded-xl ${
+            category === "Businesses"
+              ? "bg-green-500 text-white"
+              : "bg-gray-100"
+          }`}
+        >
+          Businesses
+        </button>
 
-          <button
-            onClick={() => setCategory("Activities")}
-            className={`px-4 py-2 rounded-xl ${
-              category === "Activities"
-                ? "bg-green-500 text-white"
-                : "bg-gray-100"
-            }`}
-          >
-            Activities
-          </button>
+        <button
+          onClick={() => setCategory("Activities")}
+          className={`px-4 py-2 rounded-xl ${
+            category === "Activities"
+              ? "bg-green-500 text-white"
+              : "bg-gray-100"
+          }`}
+        >
+          Activities
+        </button>
 
-          <button className="px-4 py-2 rounded-xl bg-gray-100">Saved</button>
-        </div>
+        <button className="px-4 py-2 rounded-xl bg-gray-100">Saved</button>
       </div>
 
+      <div className="mt-4 space-y-3">
+        {businesses.length === 0 ? (
+          <div className="text-center text-gray-500 py-6">
+            No businesses found.
+          </div>
+        ) : (
+          businesses.map((business) => {
+            const businessKey = getBusinessKey(business);
+
+            return (
+              <PlaceCard
+                key={businessKey}
+                business={business}
+                selected={getBusinessKey(selectedBusiness) === businessKey}
+                onClick={() => setSelectedBusiness(business)}
+              />
+            );
+          })
+        )}
+      </div>
       <div className="mt-4 space-y-3">
         {businesses.map((business) => {
           const businessKey = getBusinessKey(business);
@@ -100,7 +118,9 @@ function PlaceCard({ business, selected, onClick }) {
       type="button"
       onClick={onClick}
       className={`w-full text-left border rounded-2xl p-4 transition ${
-        selected ? "border-green-500 bg-green-50" : "border-gray-200 hover:bg-gray-50"
+        selected
+          ? "border-green-500 bg-green-50"
+          : "border-gray-200 hover:bg-gray-50"
       }`}
     >
       <div className="flex items-start gap-3">

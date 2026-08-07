@@ -5,7 +5,7 @@ function MapHero({ search, setSearch, distance, setDistance }) {
     <section className="max-w-[1500px] mx-auto px-6 py-1">
       <div className="bg-white rounded-xl shadow-md p-4">
         <div className="grid lg:grid-cols-[2fr_auto_auto_auto_auto] gap-4">
-          {/* Search */}
+        
 
           <div className="flex items-center border rounded-xl px-4 h-12">
             <Search className="text-gray-400" size={17} />
@@ -19,7 +19,6 @@ function MapHero({ search, setSearch, distance, setDistance }) {
             />
           </div>
 
-          {/* Near Me */}
 
           <button className="flex items-center gap-2 border rounded-xl px-6 h-12 hover:bg-gray-100 transition ">
             <MapPin size={18} />
