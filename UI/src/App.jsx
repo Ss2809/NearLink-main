@@ -7,7 +7,7 @@ import Businesses from "./pages/Businesses";
 import Activities from "./pages/Activities";
 import Map from "./pages/Map";
 import Profile from "./pages/Profile";
-
+import BusinessDetails from "./components/BusinessDetails";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -47,7 +47,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+      <Route path="/business/:id" element={<BusinessDetails />} />
         <Route
           path="/profile"
           element={

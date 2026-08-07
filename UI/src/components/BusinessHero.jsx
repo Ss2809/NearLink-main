@@ -2,141 +2,125 @@ import { Search, MapPin } from "lucide-react";
 import businessHero from "../assets/business-hero.png";
 import { ChevronDown } from "lucide-react";
 
-function BusinessHero() {
+function BusinessHero({
+  search,
+  setSearch,
+  sort,
+  setSort,
+}) {
   return (
     <section className="max-w-7xl mx-auto px-6 py-6 ">
-
-      {/* Hero */}
-      <div className="relative rounded-3xl overflow-hidden shadow-md">
-
+      <div className="relative overflow-hidden rounded-[32px] shadow-xl">
         <img
           src={businessHero}
           alt="Business Hero"
-          className="w-full h-65 object-cover "
+          className="w-full h-[450px] object-cover"
         />
 
-        {/* Overlay Content */}
-        <div className="absolute inset-0 flex items-center">
-          <div className="pl-10 md:pl-14 max-w-lg">
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-transparent"></div>
 
-            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
-              Discover Local
+        {/* Hero Content */}
+        <div className="absolute inset-0 z-10 flex items-center">
+          <div className="max-w-2xl px-8 md:px-14">
+            <h1 className="text-5xl md:text-6xl font-extrabold text-white leading-tight">
+              Discover Amazing
               <br />
-              Businesses
+              Local Businesses
             </h1>
 
-            <p className="mt-4 text-lg text-gray-700 leading-7">
-              Connect with trusted local businesses, discover new services,
-              and support your neighborhood with confidence.
+            <p className="mt-6 text-lg text-gray-200 leading-8 max-w-xl">
+              Explore trusted cafes, restaurants, gyms, hospitals and many more
+              businesses around your location with reviews, ratings and
+              directions.
             </p>
+          </div>
+        </div>
+      </div>
+      {/* Floating Search Card */}
+      <div className="relative z-20 max-w-5xl mx-auto -mt-10 px-4">
+        <div className="bg-white rounded-3xl shadow-xl p-6 border border-gray-100">
+          {/* Search */}
+          <div className="flex items-center h-16 border-2 border-gray-100 rounded-2xl px-5 hover:border-green-400 transition">
+            <Search size={22} className="text-green-500" />
 
+            <input
+              type="text"
+              placeholder="Search businesses..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex-1 ml-3 outline-none"
+            />
+          </div>
+        </div>
+      </div>
+      {/* Categories + Sort */}
+      <div className="max-w-7xl mx-auto mt-12">
+        {/* Heading */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
+          <div>
+            <h2 className="text-4xl font-bold text-slate-900">
+              Popular Businesses
+            </h2>
+
+            <p className="text-gray-500 mt-2">
+              Explore top-rated businesses around your location.
+            </p>
+          </div>
+
+          {/* Sort */}
+          <div className="flex items-center gap-3">
+            <span className="text-gray-600 font-medium">Sort By</span>
+
+            <select
+              className="h-12 px-5 rounded-xl border border-gray-200 outline-none hover:border-green-500 transition"
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+            >
+              <option value="newest">Newest</option>
+              <option value="rating">Highest Rating</option>
+              <option value="popular">Most Popular</option>
+              <option value="name">Name (A-Z)</option>
+            </select>
           </div>
         </div>
 
-      </div>
-
-      {/* Search Bar */}
-      <div className="bg-white rounded-2xl shadow-md p-6 max-w-6xl mx-auto mt-5 relative z-10">
-
-        <div className="grid lg:grid-cols-[2fr_1.5fr_auto] gap-4">
-
-          {/* Search */}
-          <div className="flex items-center border border-gray-200 rounded-xl px-4 h-10">
-            <Search size={20} className="text-gray-400" />
-
-            <input
-              type="text"
-              placeholder="Search businesses, services..."
-              className="flex-1 ml-3 outline-none"
-            />
-          </div>
-
-          {/* Location */}
-          <div className="flex items-center border border-gray-200 rounded-xl px-4 h-10">
-            <MapPin size={20} className="text-gray-400" />
-
-            <input
-              type="text"
-              placeholder="Enter location"
-              className="flex-1 ml-3 outline-none"
-            />
-          </div>
-
-          {/* Button */}
-          <button className="bg-green-500 hover:bg-green-600 text-white rounded-xl px-10 font-semibold h-10 transition">
-            Search
+        {/* Categories */}
+        <div className="flex flex-wrap gap-4">
+          <button className="px-6 py-3 rounded-full bg-green-500 text-white font-semibold shadow hover:bg-green-600 transition">
+            All
           </button>
 
+          <button className="px-6 py-3 rounded-full bg-white border border-gray-200 hover:border-green-500 hover:text-green-600 transition">
+            ☕ Cafe
+          </button>
+
+          <button className="px-6 py-3 rounded-full bg-white border border-gray-200 hover:border-green-500 hover:text-green-600 transition">
+            🍴 Restaurant
+          </button>
+
+          <button className="px-6 py-3 rounded-full bg-white border border-gray-200 hover:border-green-500 hover:text-green-600 transition">
+            🏋️ Gym
+          </button>
+
+          <button className="px-6 py-3 rounded-full bg-white border border-gray-200 hover:border-green-500 hover:text-green-600 transition">
+            🛍️ Shopping
+          </button>
+
+          <button className="px-6 py-3 rounded-full bg-white border border-gray-200 hover:border-green-500 hover:text-green-600 transition">
+            🏥 Hospital
+          </button>
+
+          <button className="px-6 py-3 rounded-full bg-white border border-gray-200 hover:border-green-500 hover:text-green-600 transition">
+            💇 Salon
+          </button>
+
+          <button className="px-6 py-3 rounded-full bg-white border border-gray-200 hover:border-green-500 hover:text-green-600 transition flex items-center gap-2">
+            More
+            <ChevronDown size={18} />
+          </button>
         </div>
-
       </div>
-      
-
-{/* Categories + Sort */}
-
-<div className="max-w-7xl mx-auto px-6 mt-6">
-
-  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-
-    {/* Categories */}
-
-    <div className="flex flex-wrap gap-3">
-
-      <button className="px-5 py-2 rounded-full bg-green-500 text-white font-medium">
-        All
-      </button>
-
-      <button className="px-5 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition">
-        Food & Drink
-      </button>
-
-      <button className="px-5 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition">
-        Services
-      </button>
-
-      <button className="px-5 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition">
-        Retail
-      </button>
-
-      <button className="px-5 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition">
-        Health
-      </button>
-
-      <button className="px-5 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition">
-        Education
-      </button>
-
-      <button className="px-5 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition flex items-center gap-2">
-        More
-        <ChevronDown size={16} />
-      </button>
-
-    </div>
-
-    {/* Sort */}
-
-    <div className="flex items-center gap-3">
-
-      <span className="text-gray-600 font-medium">
-        Sort by:
-      </span>
-
-      <select className="border rounded-xl px-4 py-2 outline-none">
-        <option>Distance</option>
-        <option>Rating</option>
-        <option>Newest</option>
-        <option>Popular</option>
-      </select>
-
-    </div>
-
-  </div>
-
-  {/* Heading */}
-
-
-</div>
-
     </section>
   );
 }

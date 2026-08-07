@@ -1,67 +1,81 @@
 import { Star, MapPin, Bookmark } from "lucide-react";
-
+import { Link } from "react-router-dom";
 function BusinessCard({ business }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition overflow-hidden">
-
+    <div className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
       {/* Image */}
-      <img
-        src={business.image}
-        alt={business.name}
-        className="w-full h-44 object-cover"
-      />
+      <div className="relative">
+        <img
+          src={business.image}
+          alt={business.name}
+          className="w-full h-56 object-cover"
+        />
+
+        <span
+          className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-semibold shadow ${
+            business.isOpen
+              ? "bg-green-500 text-white"
+              : "bg-red-500 text-white"
+          }`}
+        >
+          {business.isOpen ? "Open" : "Closed"}
+        </span>
+      </div>
 
       {/* Content */}
-      <div className="p-4">
+      <div className="p-5">
+        {/* Name & Category */}
+        <div className="mb-4">
+          <h3 className="text-xl font-bold text-slate-900">{business.name}</h3>
 
-        <h3 className="text-lg font-semibold text-gray-900">
-          {business.name}
-        </h3>
+          <p className="text-sm text-gray-500 mt-1">{business.category}</p>
+        </div>
 
-        <p className="text-sm text-gray-500 mt-1">
-          {business.category}
-        </p>
+        {/* Rating & Location */}
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-2">
+            <Star size={18} className="text-yellow-500 fill-yellow-500" />
 
-        {/* Rating & Distance */}
-        <div className="flex justify-between items-center mt-3">
-
-          <div className="flex items-center gap-1 text-yellow-500">
-            <Star size={16} fill="currentColor" />
-            <span className="text-gray-700 text-sm font-medium">
+            <span className="font-semibold text-gray-800">
               {business.rating}
             </span>
-            <span className="text-gray-400 text-sm">
-              ({business.reviews})
+
+            <span className="text-sm text-gray-500">
+              ({business.totalReviews} reviews)
             </span>
           </div>
 
           <div className="flex items-center gap-1 text-gray-500 text-sm">
             <MapPin size={15} />
-            {business.distance}
+            <span>{business.city}</span>
           </div>
-
         </div>
 
         {/* Description */}
-        <p className="text-gray-600 text-sm mt-3 line-clamp-2">
+        <p className="text-gray-600 text-sm leading-6 line-clamp-2 min-h-[48px]">
           {business.description}
         </p>
 
+        {/* Address */}
+        <p className="text-sm text-gray-500 mt-4 flex items-start gap-2">
+          <MapPin size={16} className="text-green-500 mt-0.5 shrink-0" />
+          <span>{business.address}</span>
+        </p>
+
         {/* Buttons */}
-        <div className="flex justify-between items-center mt-5">
-
-          <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+        <div className="flex gap-3 mt-6">
+          <Link
+            to={`/business/${business._id}`}
+            className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-semibold transition-all duration-300 text-center"
+          >
             View Details
-          </button>
+          </Link>
 
-          <button className="border border-gray-300 p-2 rounded-lg hover:bg-gray-100">
-            <Bookmark size={18} />
+          <button className="w-12 h-12 border border-gray-200 rounded-xl flex items-center justify-center hover:bg-gray-100 transition">
+            <Bookmark size={20} />
           </button>
-
         </div>
-
       </div>
-
     </div>
   );
 }
