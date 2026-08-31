@@ -30,7 +30,11 @@ const io = new Server(server, {
 app.set("io", io);
 
 // Initialize Socket.IO chat handlers
-initChatSocket(io);
+try {
+  initChatSocket(io);
+} catch (e) {
+  console.error("Socket initialization warning:", e.message);
+}
 
 app.use(express.json());
 app.use(cors());
@@ -38,8 +42,12 @@ app.use(cors());
 // Serve uploaded assets statically
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-connectDB();
+// Eagerly initiate DB connection (without blocking startup)
+connectDB().catch((err) => {
+  console.error("Initial DB connection warning:", err.message);
+});
 
+// Root & Health Endpoints
 app.get("/", (req, res) => {
   res.json({
     status: "online",
@@ -49,7 +57,30 @@ app.get("/", (req, res) => {
 });
 
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", uptime: process.uptime() });
+  res.json({
+    status: "ok",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Serverless DB Connection Middleware for API routes
+app.use(async (req, res, next) => {
+  if (req.path === "/" || req.path === "/api/health") {
+    return next();
+  }
+
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error(`DB connection failed on ${req.method} ${req.path}:`, err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Database connection failed. Please ensure MONGO_URI is configured in Vercel Environment Variables.",
+      error: err.message,
+    });
+  }
 });
 
 // Mount Routes
