@@ -1,6 +1,6 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "buildCommand": "cd UI && npm install && npm run build",
+  "outputDirectory": "UI/dist",
   "rewrites": [
     {
       "source": "/(.*)",
