@@ -49,10 +49,9 @@ connectDB().catch((err) => {
 
 // Root & Health Endpoints
 app.get("/", (req, res) => {
-  res.json({
-    status: "online",
-    service: "NearLink Backend API",
-    time: new Date().toISOString(),
+  res.status(200).json({
+    success: true,
+    message: "NearLink Backend is running",
   });
 });
 
