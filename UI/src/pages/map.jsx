@@ -5,391 +5,342 @@ import Navbar from "../components/Navbar";
 import MapHero from "../components/map/MapHero";
 import MapSidebar from "../components/map/MapSidebar";
 import MapView from "../components/map/MapView";
+import { BUSINESS_API_URL, ACTIVITY_API_URL } from "../config/api";
 
-const BUSINESS_API_URL = "http://localhost:3000/api/business";
-const OVERPASS_API_URL = "https://overpass.kumi.systems/api/interpreter";
+const MAP_FETCH_LIMIT = 1000;
 
-const normalizeCategory = (value = "Other") =>
-  value ? value.charAt(0).toUpperCase() + value.slice(1).toLowerCase() : "Other";
+// Haversine distance formula (in km)
+export const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371;
 
-const getBusinessKey = (business) => business?._id || business?.id;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
 
-const normalizeMongoBusiness = (business) => ({
-  ...business,
-  _id: business._id,
-  id: business._id,
-  category: normalizeCategory(business.category),
-  latitude: Number(business.latitude),
-  longitude: Number(business.longitude),
-  image:
-    business.image || "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600",
-  rating: Number(business.rating ?? 0),
-  totalReviews: Number(business.totalReviews ?? 0),
-  isOpen: business.isOpen ?? true,
-});
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
 
-const fallbackLocation = {
-  latitude: 40.7128,
-  longitude: -74.006,
-};
-
-const normalizeNearbyBusiness = (place) => {
-  const rawCategory =
-    place.tags.amenity || place.tags.shop || place.tags.tourism || "Other";
-
-  return {
-    id: `osm-${place.id}`,
-    name: place.tags.name,
-    category: normalizeCategory(rawCategory),
-    latitude: Number(place.lat),
-    longitude: Number(place.lon),
-    address: place.tags["addr:street"] || place.tags["addr:full"] || "Nearby",
-    city: place.tags["addr:city"] || "Nearby",
-    image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600",
-    rating: 0,
-    totalReviews: 0,
-    isOpen: true,
-  };
+  const distance = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+  return Number(distance.toFixed(2));
 };
 
 function MapPage() {
-  const [mongoBusinesses, setMongoBusinesses] = useState([]);
-  const [nearbyBusinesses, setNearbyBusinesses] = useState([]);
-  const [selectedBusiness, setSelectedBusiness] = useState(null);
+  const [items, setItems] = useState([]);
+  const [skippedCount, setSkippedCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   const [search, setSearch] = useState("");
-  const [distance, setDistance] = useState(2);
+  const [distance, setDistance] = useState(0); // 0 = All radius
   const [category, setCategory] = useState("All");
 
   const [userLocation, setUserLocation] = useState(null);
   const [locationName, setLocationName] = useState("");
+  const [locating, setLocating] = useState(false);
+  const [locationStatus, setLocationStatus] = useState("idle"); // 'idle' | 'locating' | 'granted' | 'denied' | 'unavailable'
+  const [locationError, setLocationError] = useState("");
 
   const locationRequestedRef = useRef(false);
-  const mongoRequestedRef = useRef(false);
 
-  const fetchMongoBusinesses = async () => {
-    const response = await axios.get(BUSINESS_API_URL);
-    return (response.data.businesses || []).map(normalizeMongoBusiness);
-  };
-
-  const fetchNearbyPlaces = async (lat, lon, radiusKm) => {
-    const query = `
-[out:json][timeout:25];
-(
-  node["amenity"~"cafe|restaurant|hospital|pharmacy"](around:${radiusKm * 1000},${lat},${lon});
-  way["amenity"~"cafe|restaurant|hospital|pharmacy"](around:${radiusKm * 1000},${lat},${lon});
-  relation["amenity"~"cafe|restaurant|hospital|pharmacy"](around:${radiusKm * 1000},${lat},${lon});
-);
-out center;
-`;
-
-    try {
-      const response = await fetch(OVERPASS_API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "text/plain; charset=utf-8",
-          Accept: "application/json",
-        },
-        body: query,
-      });
-
-      const bodyText = await response.text();
-
-      if (!response.ok) {
-        console.log("Overpass Error:", response.status, bodyText);
-        return [];
-      }
-
-      let data;
-
-      try {
-        data = JSON.parse(bodyText);
-      } catch (parseError) {
-        console.log("Overpass JSON Parse Error:", parseError, bodyText);
-        return [];
-      }
-
-      return (data.elements || [])
-        .filter((place) => place.tags?.name)
-        .slice(0, 15)
-        .map((place) => {
-          const latitude = Number(place.lat ?? place.center?.lat);
-          const longitude = Number(place.lon ?? place.center?.lon);
-
-          if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-            return null;
-          }
-
-          return normalizeNearbyBusiness({
-            ...place,
-            lat: latitude,
-            lon: longitude,
-          });
-        })
-        .filter(Boolean);
-    } catch (err) {
-      console.log(err);
-      return [];
-    }
-  };
-
-  useEffect(() => {
-    if (mongoRequestedRef.current) {
-      return;
-    }
-
-    mongoRequestedRef.current = true;
-    let cancelled = false;
-
-    const loadMongoBusinesses = async () => {
-      try {
-        const businesses = await fetchMongoBusinesses();
-
-        if (!cancelled) {
-          setMongoBusinesses(businesses);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    loadMongoBusinesses();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    console.log("useEffect Started");
-    if (locationRequestedRef.current) {
-      return;
-    }
-
-    locationRequestedRef.current = true;
-
-    let cancelled = false;
-
+  // Request browser geolocation using native navigator.geolocation
+  const requestUserLocation = () => {
     if (!navigator.geolocation) {
-      setUserLocation(fallbackLocation);
-      setLocationName("Using default location");
-      return undefined;
-    }
-     console.log("useEffect Started");
-  navigator.geolocation.getCurrentPosition(
-  async (position) => {
-    const latitude = position.coords.latitude;
-    const longitude = position.coords.longitude;
-
-    console.log("Latitude:", latitude);
-    console.log("Longitude:", longitude);
-
-    setUserLocation({
-      latitude,
-      longitude,
-    });
-
-    try {
-      const geoRes = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
-      );
-
-      const geoData = await geoRes.json();
-
-      console.log("Reverse Geo:", geoData);
-
-      setLocationName(
-        geoData.address?.suburb ||
-          geoData.address?.city ||
-          geoData.address?.town ||
-          geoData.address?.village ||
-          "My Location"
-      );
-    } catch (err) {
-      console.log(err);
-      setLocationName("My Location");
-    }
-  },
-  (err) => {
-    console.log("Geolocation Error:", err);
-    setUserLocation(fallbackLocation);
-    setLocationName("Using default location");
-  },
-  {
-    enableHighAccuracy: true,
-    timeout: 10000,
-    maximumAge: 0,
-  }
-);
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!userLocation) {
+      setLocationStatus("unavailable");
+      setLocationError("Geolocation is not supported by your browser.");
       return;
     }
 
-    let cancelled = false;
+    setLocating(true);
+    setLocationStatus("locating");
+    setLocationError("");
 
-    const loadNearbyBusinesses = async () => {
-      const businesses = await fetchNearbyPlaces(
-        userLocation.latitude,
-        userLocation.longitude,
-        distance,
-      );
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
 
-      if (!cancelled) {
-        setNearbyBusinesses(businesses);
+        setUserLocation({ latitude, longitude });
+        setLocating(false);
+        setLocationStatus("granted");
+        setLocationError("");
+
+        try {
+          const geoRes = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+          );
+          const geoData = await geoRes.json();
+          setLocationName(
+            geoData.address?.suburb ||
+              geoData.address?.city ||
+              geoData.address?.town ||
+              "Your Current Location"
+          );
+        } catch (err) {
+          console.error("Reverse geocoding error:", err);
+          setLocationName("Your Current Location");
+        }
+      },
+      (err) => {
+        console.warn("Geolocation Error:", err.message);
+        setLocating(false);
+
+        if (err.code === err.PERMISSION_DENIED) {
+          setLocationStatus("denied");
+          setLocationError("Location permission is required to show your current location.");
+        } else {
+          setLocationStatus("unavailable");
+          setLocationError("Your location could not be determined.");
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 12000,
+        maximumAge: 30000,
       }
-    };
-
-    loadNearbyBusinesses();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [userLocation, distance]);
-
-  const businesses = useMemo(() => {
-    const mergedBusinesses = new Map();
-
-    [...mongoBusinesses, ...nearbyBusinesses].forEach((business) => {
-      const key = getBusinessKey(business);
-
-      if (key) {
-        mergedBusinesses.set(key, business);
-      }
-    });
-
-    return Array.from(mergedBusinesses.values());
-  }, [mongoBusinesses, nearbyBusinesses]);
-
-  const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371;
-
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
-
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-
-    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    );
   };
 
-  const filteredBusinesses = useMemo(() => {
-    const searchTerm = search.trim().toLowerCase();
-    const businessCategories = new Set([
-      "Cafe",
-      "Restaurant",
-      "Gym",
-      "Hospital",
-      "Medical",
-      "Salon",
-      "Hotel",
-      "Shop",
-      "Education",
-      "Other",
-      "Pharmacy",
-    ]);
-    const activityCategories = new Set(["Activity", "Event", "Sports"]);
+  // Fetch real database businesses and activities from MongoDB APIs
+  const fetchMapEntities = async () => {
+    try {
+      setLoading(true);
 
-    return businesses.filter((business) => {
-      const businessName = (business.name || "").toLowerCase();
-      const businessCategory = (business.category || "").toLowerCase();
-      const businessAddress = (business.address || "").toLowerCase();
-      const businessCity = (business.city || "").toLowerCase();
+      const [businessRes, activityRes] = await Promise.allSettled([
+        axios.get(`${BUSINESS_API_URL}?page=1&limit=${MAP_FETCH_LIMIT}&sort=newest`),
+        axios.get(`${ACTIVITY_API_URL}?page=1&limit=${MAP_FETCH_LIMIT}`),
+      ]);
 
-      const matchesSearch =
-        searchTerm === "" ||
-        businessName.includes(searchTerm) ||
-        businessCategory.includes(searchTerm) ||
-        businessAddress.includes(searchTerm) ||
-        businessCity.includes(searchTerm);
+      const validEntities = [];
+      let skipped = 0;
 
-      const matchesCategory =
-        category === "All" ||
-        (category === "Businesses" && businessCategories.has(business.category)) ||
-        (category === "Activities" && activityCategories.has(business.category));
+      // 1. Process Real Businesses from MongoDB
+      if (businessRes.status === "fulfilled" && businessRes.value.data?.businesses) {
+        businessRes.value.data.businesses.forEach((biz) => {
+          const lat = Number(biz.latitude);
+          const lng = Number(biz.longitude);
 
-      const hasValidCoordinates =
-        Number.isFinite(business.latitude) && Number.isFinite(business.longitude);
-
-      const matchesDistance =
-        !userLocation ||
-        !hasValidCoordinates ||
-        calculateDistance(
-          userLocation.latitude,
-          userLocation.longitude,
-          business.latitude,
-          business.longitude,
-        ) <= distance;
-
-      return matchesSearch && matchesCategory && matchesDistance;
-    });
-  }, [businesses, category, distance, search, userLocation]);
-
-  useEffect(() => {
-    if (filteredBusinesses.length === 0) {
-      if (selectedBusiness !== null) {
-        setSelectedBusiness(null);
+          // Strictly require real, valid finite numeric coordinates
+          if (
+            Number.isFinite(lat) &&
+            Number.isFinite(lng) &&
+            lat >= -90 &&
+            lat <= 90 &&
+            lng >= -180 &&
+            lng <= 180 &&
+            (lat !== 0 || lng !== 0)
+          ) {
+            validEntities.push({
+              _id: biz._id || biz.id,
+              id: biz._id || biz.id,
+              itemType: "business",
+              name: biz.name,
+              category: biz.category || "Other",
+              description: biz.description || "",
+              address: biz.address || "",
+              city: biz.city || "Pune",
+              latitude: lat,
+              longitude: lng,
+              phone: biz.phone || "",
+              email: biz.email || "",
+              website: biz.website || "",
+              image:
+                biz.image && biz.image.trim() !== ""
+                  ? biz.image
+                  : "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600",
+              rating: Number(biz.rating ?? 0),
+              totalReviews: Number(biz.totalReviews ?? 0),
+              isOpen: biz.isOpen ?? true,
+              openingHours: biz.openingHours || "",
+            });
+          } else {
+            skipped += 1;
+          }
+        });
       }
 
-      return;
-    }
+      // 2. Process Real Activities from MongoDB (Exclude Cancelled & Missing Coordinates)
+      if (activityRes.status === "fulfilled" && activityRes.value.data?.activities) {
+        activityRes.value.data.activities.forEach((act) => {
+          if (act.status === "Cancelled") return;
 
-    const selectedKey = getBusinessKey(selectedBusiness);
-    const stillVisible = filteredBusinesses.some(
-      (business) => getBusinessKey(business) === selectedKey,
-    );
+          const lat = Number(act.latitude);
+          const lng = Number(act.longitude);
 
-    if (!selectedBusiness || !stillVisible) {
-      setSelectedBusiness(filteredBusinesses[0]);
+          if (
+            Number.isFinite(lat) &&
+            Number.isFinite(lng) &&
+            lat >= -90 &&
+            lat <= 90 &&
+            lng >= -180 &&
+            lng <= 180 &&
+            (lat !== 0 || lng !== 0)
+          ) {
+            validEntities.push({
+              _id: act._id || act.id,
+              id: act._id || act.id,
+              itemType: "activity",
+              name: act.title,
+              title: act.title,
+              category: act.category || "Activity",
+              description: act.description || "",
+              address: act.location || "",
+              city: act.city || "Pune",
+              latitude: lat,
+              longitude: lng,
+              image:
+                act.image && act.image.trim() !== ""
+                  ? act.image
+                  : "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=600",
+              date: act.date,
+              startTime: act.startTime || "",
+              endTime: act.endTime || "",
+              participantCount: act.participants?.length || 0,
+              maxParticipants: act.maxParticipants || 0,
+            });
+          } else {
+            skipped += 1;
+          }
+        });
+      }
+
+      setItems(validEntities);
+      setSkippedCount(skipped);
+    } catch (error) {
+      console.error("Fetch map entities error:", error);
+    } finally {
+      setLoading(false);
     }
-  }, [filteredBusinesses, selectedBusiness]);
+  };
+
+  useEffect(() => {
+    fetchMapEntities();
+  }, []);
+
+  // Detect user location immediately on initial page load
+  useEffect(() => {
+    if (!locationRequestedRef.current) {
+      locationRequestedRef.current = true;
+      requestUserLocation();
+    }
+  }, []);
+
+  // Filter items by Search, Category, and Distance
+  const filteredItems = useMemo(() => {
+    const searchTerm = search.trim().toLowerCase();
+
+    return items
+      .map((item) => {
+        const dist =
+          userLocation && item.latitude && item.longitude
+            ? calculateDistance(
+                userLocation.latitude,
+                userLocation.longitude,
+                item.latitude,
+                item.longitude
+              )
+            : null;
+
+        return {
+          ...item,
+          distance: dist,
+        };
+      })
+      .filter((item) => {
+        // Search Filter
+        const itemName = (item.name || item.title || "").toLowerCase();
+        const itemCategory = (item.category || "").toLowerCase();
+        const itemAddress = (item.address || "").toLowerCase();
+        const itemCity = (item.city || "").toLowerCase();
+
+        const matchesSearch =
+          searchTerm === "" ||
+          itemName.includes(searchTerm) ||
+          itemCategory.includes(searchTerm) ||
+          itemAddress.includes(searchTerm) ||
+          itemCity.includes(searchTerm);
+
+        // Category / Type Filter
+        let matchesCategory = true;
+        if (category === "Businesses") {
+          matchesCategory = item.itemType === "business";
+        } else if (category === "Activities") {
+          matchesCategory = item.itemType === "activity";
+        } else if (category !== "All") {
+          matchesCategory =
+            item.category.toLowerCase() === category.toLowerCase();
+        }
+
+        // Distance Filter (if distance > 0 and userLocation is available)
+        let matchesDistance = true;
+        if (userLocation && distance > 0 && item.distance !== null) {
+          matchesDistance = item.distance <= distance;
+        }
+
+        return matchesSearch && matchesCategory && matchesDistance;
+      })
+      .sort((a, b) => {
+        if (a.distance !== null && b.distance !== null) {
+          return a.distance - b.distance;
+        }
+        return 0;
+      });
+  }, [items, category, distance, search, userLocation]);
 
   return (
-    <> 
-    
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       <Navbar />
+
       <MapHero
         search={search}
         setSearch={setSearch}
         distance={distance}
         setDistance={setDistance}
+        onLocateMe={requestUserLocation}
+        locating={locating}
+        locationName={locationName}
         category={category}
         setCategory={setCategory}
+        totalCount={filteredItems.length}
       />
 
-      <section className="max-w-375 mx-auto px-6 py-4 h-[calc(100vh-140px)]">
-        <div className="flex gap-6 h-full overflow-hidden">
-          <div className="w-90 h-full overflow-y-auto">
+      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 md:px-6 py-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 h-[calc(100vh-210px)] min-h-[550px]">
+          {/* Left Sidebar List */}
+          <div className="h-full overflow-hidden flex flex-col bg-white rounded-3xl shadow-sm border border-slate-200/80">
             <MapSidebar
-              businesses={filteredBusinesses}
-              selectedBusiness={selectedBusiness}
-              setSelectedBusiness={setSelectedBusiness}
+              items={filteredItems}
+              selectedItem={selectedItem}
+              setSelectedItem={setSelectedItem}
               category={category}
               setCategory={setCategory}
               userLocation={userLocation}
               locationName={locationName}
+              loading={loading}
+              skippedCount={skippedCount}
             />
           </div>
 
-          <MapView
-            businesses={filteredBusinesses}
-            selectedBusiness={selectedBusiness}
-            setSelectedBusiness={setSelectedBusiness}
-            userLocation={userLocation}
-          />
+          {/* Right Map View */}
+          <div className="h-full overflow-hidden rounded-3xl shadow-sm border border-slate-200/80 bg-white">
+            <MapView
+              items={filteredItems}
+              selectedItem={selectedItem}
+              setSelectedItem={setSelectedItem}
+              userLocation={userLocation}
+              onLocateMe={requestUserLocation}
+              locating={locating}
+              locationStatus={locationStatus}
+              locationError={locationError}
+              loading={loading}
+            />
+          </div>
         </div>
-      </section>
-    </>
+      </main>
+    </div>
   );
 }
 

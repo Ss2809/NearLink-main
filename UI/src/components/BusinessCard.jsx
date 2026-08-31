@@ -1,12 +1,18 @@
 import { Star, MapPin, Bookmark } from "lucide-react";
 import { Link } from "react-router-dom";
+
 function BusinessCard({ business }) {
+  const imageUrl =
+    business.image && business.image.trim() !== ""
+      ? business.image
+      : "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600";
+
   return (
     <div className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
       {/* Image */}
       <div className="relative">
         <img
-          src={business.image}
+          src={imageUrl}
           alt={business.name}
           className="w-full h-56 object-cover"
         />
@@ -37,11 +43,11 @@ function BusinessCard({ business }) {
             <Star size={18} className="text-yellow-500 fill-yellow-500" />
 
             <span className="font-semibold text-gray-800">
-              {business.rating}
+              {business.rating || 0}
             </span>
 
             <span className="text-sm text-gray-500">
-              ({business.totalReviews} reviews)
+              ({business.totalReviews || 0} reviews)
             </span>
           </div>
 
@@ -65,7 +71,7 @@ function BusinessCard({ business }) {
         {/* Buttons */}
         <div className="flex gap-3 mt-6">
           <Link
-            to={`/business/${business._id}`}
+            to={`/business/${business._id || business.id}`}
             className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-semibold transition-all duration-300 text-center"
           >
             View Details

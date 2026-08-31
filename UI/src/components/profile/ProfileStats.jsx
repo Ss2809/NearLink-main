@@ -1,65 +1,72 @@
 import {
-  Bookmark,
-  CalendarDays,
   Store,
-  Star,
+  CalendarCheck,
+  CalendarPlus,
+  Sparkles,
 } from "lucide-react";
 
-function ProfileStats() {
-  const stats = [
+function ProfileStats({ stats }) {
+  const statItems = [
     {
       id: 1,
-      title: "Saved Places",
-      value: 12,
-      icon: Bookmark,
-      color: "bg-blue-100 text-blue-600",
+      title: "My Businesses",
+      value: stats?.myBusinessesCount ?? 0,
+      icon: Store,
+      color: "bg-emerald-100 text-emerald-600",
     },
     {
       id: 2,
       title: "Joined Activities",
-      value: 5,
-      icon: CalendarDays,
-      color: "bg-green-100 text-green-600",
+      value: stats?.joinedActivitiesCount ?? 0,
+      icon: CalendarCheck,
+      color: "bg-blue-100 text-blue-600",
     },
     {
       id: 3,
-      title: "My Businesses",
-      value: 2,
-      icon: Store,
-      color: "bg-orange-100 text-orange-600",
+      title: "Organized Activities",
+      value: stats?.createdActivitiesCount ?? 0,
+      icon: CalendarPlus,
+      color: "bg-purple-100 text-purple-600",
     },
     {
       id: 4,
-      title: "Reviews",
-      value: 18,
-      icon: Star,
-      color: "bg-yellow-100 text-yellow-600",
+      title: "Community Status",
+      value: "Active",
+      isBadge: true,
+      icon: Sparkles,
+      color: "bg-amber-100 text-amber-600",
     },
   ];
 
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
-      {stats.map((item) => {
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      {statItems.map((item) => {
         const Icon = item.icon;
 
         return (
           <div
             key={item.id}
-            className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition"
+            className="bg-white rounded-3xl shadow-xs border border-slate-200/80 p-5 md:p-6 hover:shadow-md transition group"
           >
             <div
-              className={`w-14 h-14 rounded-xl flex items-center justify-center ${item.color}`}
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center ${item.color} group-hover:scale-105 transition shadow-2xs`}
             >
-              <Icon size={28} />
+              <Icon size={24} />
             </div>
 
-            <h2 className="text-3xl font-bold mt-5 text-slate-800">
-              {item.value}
-            </h2>
+            <div className="mt-4">
+              <h2
+                className={`font-extrabold text-slate-900 ${
+                  item.isBadge ? "text-xl text-green-600" : "text-3xl"
+                }`}
+              >
+                {item.value}
+              </h2>
 
-            <p className="text-gray-500 mt-2">
-              {item.title}
-            </p>
+              <p className="text-xs font-medium text-slate-500 mt-1">
+                {item.title}
+              </p>
+            </div>
           </div>
         );
       })}

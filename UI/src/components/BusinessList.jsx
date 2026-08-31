@@ -2,15 +2,17 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import BusinessCard from "./BusinessCard";
 import Pagination from "./Pagination";
+import { BUSINESS_API_URL } from "../config/api";
 
-function BusinessList({ search, sort }) {
+function BusinessList({ search, sort, category }) {
   const [businesses, setBusinesses] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [location, setLocation] = useState(null);
   useEffect(() => {
-    axios.get(
-  `http://localhost:3000/api/business?page=${currentPage}&limit=6&search=${search}&sort=${sort}`
+  axios.get(
+  `${BUSINESS_API_URL}?page=${currentPage}&limit=6&search=${encodeURIComponent(search)}&sort=${sort}&category=${encodeURIComponent(category)}&lat=${location?.latitude || ""}&lng=${location?.longitude || ""}`
 )
       .then((res) => {
         setBusinesses(res.data.businesses || []);
@@ -22,7 +24,7 @@ function BusinessList({ search, sort }) {
       .finally(() => {
         setLoading(false);
       });
-}, [currentPage, search, sort]);
+}, [currentPage, search, sort, category, location]);
 
   useEffect(() => {
     setCurrentPage(1);

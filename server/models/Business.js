@@ -23,6 +23,7 @@ const businessSchema = new mongoose.Schema(
         "Education",
         "Other",
       ],
+      default: "Other",
     },
 
     description: {
@@ -66,6 +67,11 @@ const businessSchema = new mongoose.Schema(
     },
 
     image: {
+      type: String,
+      default: "",
+    },
+
+    openingHours: {
       type: String,
       default: "",
     },

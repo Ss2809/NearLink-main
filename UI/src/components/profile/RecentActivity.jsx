@@ -1,74 +1,79 @@
-import { Clock, MapPin, Calendar, Star } from "lucide-react";
+import { Clock, MapPin, Calendar, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-function RecentActivity() {
-  const activities = [
-    {
-      id: 1,
-      title: "Joined Morning Yoga",
-      subtitle: "Koregaon Park",
-      time: "2 hours ago",
-      icon: Calendar,
-      color: "bg-green-100 text-green-600",
-    },
-    {
-      id: 2,
-      title: "Saved Cafe Aroma",
-      subtitle: "Wagholi",
-      time: "Yesterday",
-      icon: MapPin,
-      color: "bg-blue-100 text-blue-600",
-    },
-    {
-      id: 3,
-      title: "Reviewed Fit & Strong Gym",
-      subtitle: "⭐⭐⭐⭐⭐",
-      time: "2 days ago",
-      icon: Star,
-      color: "bg-yellow-100 text-yellow-600",
-    },
-  ];
+function RecentActivity({ activities }) {
+  const navigate = useNavigate();
+
+  const activityList = activities || [];
 
   return (
-    <div className="bg-white rounded-2xl shadow-md p-6 mt-8">
-      <h2 className="text-2xl font-bold mb-6">
-        Recent Activity
-      </h2>
+    <div className="bg-white rounded-3xl shadow-xs border border-slate-200/80 p-6 md:p-8">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900">Recent Activities</h2>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Events you organized or joined
+          </p>
+        </div>
 
-      <div className="space-y-5">
-        {activities.map((item) => {
-          const Icon = item.icon;
+        <button
+          onClick={() => navigate("/activities")}
+          className="text-xs font-semibold text-green-600 hover:text-green-700 flex items-center gap-1 transition"
+        >
+          Explore All <ArrowRight size={14} />
+        </button>
+      </div>
 
-          return (
+      {activityList.length === 0 ? (
+        <div className="text-center py-10 px-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+          <Calendar size={28} className="text-slate-400 mx-auto mb-2" />
+          <p className="text-sm font-semibold text-slate-700">
+            No recent activities yet
+          </p>
+          <p className="text-xs text-slate-400 mt-1">
+            Join a local event or create an activity to get started!
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {activityList.map((item) => (
             <div
-              key={item.id}
-              className="flex items-center justify-between border-b pb-4 last:border-none"
+              key={item._id}
+              onClick={() => navigate(`/activity/${item._id}`)}
+              className="flex items-center justify-between p-3.5 rounded-2xl hover:bg-slate-50 transition border border-slate-100 cursor-pointer group"
             >
-              <div className="flex items-center gap-4">
-                <div
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center ${item.color}`}
-                >
-                  <Icon size={22} />
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-xl bg-green-100 text-green-700 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+                  <Calendar size={20} />
                 </div>
 
-                <div>
-                  <h3 className="font-semibold">
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold text-slate-800 truncate group-hover:text-green-700 transition">
                     {item.title}
                   </h3>
 
-                  <p className="text-sm text-gray-500">
-                    {item.subtitle}
+                  <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5 truncate">
+                    <MapPin size={12} className="shrink-0" />
+                    <span>{item.location || item.city || "Pune"}</span>
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 text-gray-500 text-sm">
-                <Clock size={15} />
-                {item.time}
+              <div className="flex items-center gap-2 text-slate-400 text-xs shrink-0 font-medium">
+                <Clock size={14} />
+                <span>
+                  {item.date
+                    ? new Date(item.date).toLocaleDateString("en-IN", {
+                        month: "short",
+                        day: "numeric",
+                      })
+                    : "Upcoming"}
+                </span>
               </div>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,149 +1,146 @@
-import { MapPin, Bookmark } from "lucide-react";
-
-const getBusinessKey = (business) => business?._id || business?.id;
+import { MapPin, Store, Calendar, Star, Clock, Users, Navigation, Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 function MapSidebar({
-  businesses,
-  selectedBusiness,
-  setSelectedBusiness,
+  items = [],
+  selectedItem,
+  setSelectedItem,
   category,
   setCategory,
+  userLocation,
   locationName,
+  loading,
 }) {
+  const getItemKey = (item) => item?._id || item?.id;
+
   return (
-    <div className="w-90 bg-white rounded-2xl shadow-md p-5">
-      <h2 className="text-2xl font-bold text-slate-900">Explore Nearby</h2>
-
-      <p className="text-gray-500 mt-2">
-        Find businesses and activities around you
-      </p>
-
-      <div className="mt-6 border rounded-2xl p-4 flex items-center justify-between">
-        <div className="flex gap-4">
-          <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-            <MapPin className="text-green-600" />
-          </div>
-
-          <div>
-            <h3 className="font-semibold">My Location</h3>
-            <p className="text-gray-500 text-sm">
-              {locationName || "Getting location..."}
-            </p>
-          </div>
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Header Info */}
+      <div className="p-4 border-b border-slate-100 shrink-0">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-slate-900">Explore Nearby</h2>
+          <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+            {items.length} places
+          </span>
         </div>
 
-        <MapPin className="text-green-500" />
+        {/* User Location Bar */}
+        <div className="mt-3 flex items-center justify-between p-2.5 bg-green-50/70 border border-green-200/60 rounded-xl">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-green-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+              <Navigation size={15} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-green-800">
+                Your Location
+              </p>
+              <p className="text-xs font-semibold text-slate-800 truncate">
+                {locationName || "Detecting position..."}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="flex gap-2 mt-4 flex-wrap">
-        <button
-          onClick={() => setCategory("All")}
-          className={`px-4 py-2 rounded-xl ${
-            category === "All" ? "bg-green-500 text-white" : "bg-gray-100"
-          }`}
-        >
-          All
-        </button>
-
-        <button
-          onClick={() => setCategory("Businesses")}
-          className={`px-4 py-2 rounded-xl ${
-            category === "Businesses"
-              ? "bg-green-500 text-white"
-              : "bg-gray-100"
-          }`}
-        >
-          Businesses
-        </button>
-
-        <button
-          onClick={() => setCategory("Activities")}
-          className={`px-4 py-2 rounded-xl ${
-            category === "Activities"
-              ? "bg-green-500 text-white"
-              : "bg-gray-100"
-          }`}
-        >
-          Activities
-        </button>
-
-        <button className="px-4 py-2 rounded-xl bg-gray-100">Saved</button>
-      </div>
-
-      <div className="mt-4 space-y-3">
-        {businesses.length === 0 ? (
-          <div className="text-center text-gray-500 py-6">
-            No businesses found.
+      {/* Item List */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+        {loading ? (
+          <div className="py-16 text-center text-slate-400">
+            <Loader2 size={24} className="animate-spin text-green-600 mx-auto mb-2" />
+            <p className="text-xs font-medium">Loading nearby places...</p>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="py-12 px-4 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+            <MapPin size={28} className="mx-auto text-slate-300 mb-2" />
+            <h3 className="text-sm font-bold text-slate-700">No places found</h3>
+            <p className="text-xs text-slate-400 mt-1">
+              Try adjusting your search query, increasing distance radius, or switching categories.
+            </p>
           </div>
         ) : (
-          businesses.map((business) => {
-            const businessKey = getBusinessKey(business);
+          items.map((item) => {
+            const itemKey = getItemKey(item);
+            const isSelected = getItemKey(selectedItem) === itemKey;
+            const isBusiness = item.itemType === "business";
 
             return (
-              <PlaceCard
-                key={businessKey}
-                business={business}
-                selected={getBusinessKey(selectedBusiness) === businessKey}
-                onClick={() => setSelectedBusiness(business)}
-              />
+              <button
+                key={itemKey}
+                type="button"
+                onClick={() => setSelectedItem(item)}
+                className={`w-full text-left p-3 rounded-2xl border transition flex gap-3 group ${
+                  isSelected
+                    ? "border-green-500 bg-green-50/70 shadow-sm ring-2 ring-green-400/30"
+                    : "border-slate-200/80 bg-white hover:bg-slate-50/80 hover:border-slate-300"
+                }`}
+              >
+                {/* Thumbnail */}
+                <div className="relative w-18 h-18 rounded-xl overflow-hidden shrink-0 bg-slate-100 border border-slate-200/60">
+                  <img
+                    src={
+                      item.image ||
+                      (isBusiness
+                        ? "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=400"
+                        : "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=400")
+                    }
+                    alt={item.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                  />
+                  <span
+                    className={`absolute top-1 left-1 p-1 rounded-md text-[10px] text-white shadow-xs ${
+                      isBusiness ? "bg-green-600" : "bg-purple-600"
+                    }`}
+                  >
+                    {isBusiness ? <Store size={10} /> : <Calendar size={10} />}
+                  </span>
+                </div>
+
+                {/* Content */}
+                <div className="min-w-0 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between gap-1">
+                      <h3 className="font-bold text-sm text-slate-900 truncate">
+                        {item.name}
+                      </h3>
+                      {item.distance !== null && (
+                        <span className="text-[11px] font-bold text-green-700 bg-green-100/80 px-1.5 py-0.5 rounded-md shrink-0">
+                          {item.distance} km
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                        {item.category}
+                      </span>
+                      {isBusiness && item.rating > 0 && (
+                        <span className="text-[11px] font-bold text-amber-600 flex items-center gap-0.5">
+                          <Star size={11} className="fill-amber-500 text-amber-500" />
+                          {item.rating}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-500 truncate flex items-center gap-1 mt-1">
+                    <MapPin size={12} className="shrink-0 text-slate-400" />
+                    {item.address}, {item.city}
+                  </p>
+
+                  {/* Activity Timing */}
+                  {!isBusiness && item.startTime && (
+                    <p className="text-[11px] text-purple-700 font-medium flex items-center gap-1 mt-1">
+                      <Clock size={11} className="shrink-0" />
+                      {item.date ? new Date(item.date).toLocaleDateString("en-IN", { month: "short", day: "numeric" }) : "Upcoming"} • {item.startTime}
+                    </p>
+                  )}
+                </div>
+              </button>
             );
           })
         )}
       </div>
-      <div className="mt-4 space-y-3">
-        {businesses.map((business) => {
-          const businessKey = getBusinessKey(business);
-
-          return (
-            <PlaceCard
-              key={businessKey}
-              business={business}
-              selected={getBusinessKey(selectedBusiness) === businessKey}
-              onClick={() => setSelectedBusiness(business)}
-            />
-          );
-        })}
-      </div>
-
-      <button className="w-full mt-8 border-2 border-green-500 text-green-600 rounded-xl h-10 hover:bg-green-500 hover:text-white transition">
-        View All Places
-      </button>
     </div>
-  );
-}
-
-function PlaceCard({ business, selected, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`w-full text-left border rounded-2xl p-4 transition ${
-        selected
-          ? "border-green-500 bg-green-50"
-          : "border-gray-200 hover:bg-gray-50"
-      }`}
-    >
-      <div className="flex items-start gap-3">
-        <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
-          <Bookmark className="text-green-600" size={18} />
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-3">
-            <h3 className="font-semibold text-slate-900 truncate">
-              {business.name}
-            </h3>
-            <span className="text-xs text-green-600 font-medium shrink-0">
-              {business.category}
-            </span>
-          </div>
-
-          <p className="text-sm text-gray-500 mt-1 truncate">
-            {business.address}
-          </p>
-        </div>
-      </div>
-    </button>
   );
 }
 

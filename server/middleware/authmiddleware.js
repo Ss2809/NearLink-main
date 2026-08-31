@@ -9,13 +9,19 @@ const authmiddleware = (req, res, next) => {
         message: "No token provided",
       });
     }
+
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+
+    req.user = {
+      ...decoded,
+      id: decoded.id,
+      _id: decoded.id,
+    };
 
     next();
   } catch (error) {
-    res.json({
+    return res.status(401).json({
       success: false,
       message: "Invalid Token",
     });

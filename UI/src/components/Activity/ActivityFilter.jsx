@@ -3,123 +3,122 @@ import {
   MapPin,
   Calendar,
   Filter,
-  ChevronDown,
 } from "lucide-react";
 
-function ActivityFilter() {
+function ActivityFilter({
+  search,
+  setSearch,
+  location,
+  setLocation,
+  category,
+  setCategory,
+  date,
+  setDate,
+  activeTab,
+  setActiveTab,
+  onCreateActivity,
+}) {
+  const tabs = [
+    { id: "all", label: "All Activities" },
+    { id: "my", label: "My Activities" },
+    { id: "joined", label: "Joined" },
+    { id: "saved", label: "Saved" },
+  ];
+
   return (
     <section className="max-w-7xl mx-auto px-7">
-
-      {/* Tabs + Button */}
+      {/* TABS + CREATE */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-
-        {/* Tabs */}
-        <div className="flex gap-10">
-
-          <button className="text-green-600 font-semibold border-b-2 border-green-600 pb-3">
-            All Activities
-          </button>
-
-          <button className="text-gray-600 hover:text-green-600 transition">
-            My Activities
-          </button>
-
-          <button className="text-gray-600 hover:text-green-600 transition">
-            Joined
-          </button>
-
-          <button className="text-gray-600 hover:text-green-600 transition">
-            Saved
-          </button>
-
+        
+        <div className="flex gap-8">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`pb-3 font-semibold transition ${
+                activeTab === tab.id
+                  ? "text-green-600 border-b-2 border-green-600"
+                  : "text-gray-600 hover:text-green-600"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        {/* Create Button */}
-
-        <button className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-semibold">
+        <button
+          onClick={onCreateActivity}
+          className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-semibold"
+        >
           + Create Activity
         </button>
-
       </div>
 
-      {/* Divider */}
+      <div className="border-b mt-2" />
 
-      <div className="border-b mt-2"></div>
-
-      {/* Search Filters */}
-
+      {/* FILTERS */}
       <div className="grid lg:grid-cols-[2fr_1.4fr_1.2fr_1.2fr_auto] gap-4 mt-4">
 
-        {/* Search */}
-
         <div className="flex items-center border rounded-xl px-4 h-12">
-
           <Search size={20} className="text-gray-400" />
 
           <input
             type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Search activities..."
             className="flex-1 outline-none ml-3"
           />
-
         </div>
 
-        {/* Location */}
-
         <div className="flex items-center border rounded-xl px-4 h-12">
-
           <MapPin size={20} className="text-gray-400" />
 
           <input
             type="text"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
             placeholder="Location"
             className="flex-1 outline-none ml-3"
           />
-
         </div>
 
-        {/* Category */}
-
-        <div className="flex items-center justify-between border rounded-xl px-4 h-12 cursor-pointer">
-
-          <span className="text-gray-500">
-            Categories
-          </span>
-
-          <ChevronDown size={18} />
-
+        <div className="flex items-center border rounded-xl h-12">
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="w-full h-full px-4 outline-none bg-transparent cursor-pointer"
+          >
+            <option value="All">Categories</option>
+            <option value="Sports">Sports</option>
+            <option value="Music">Music</option>
+            <option value="Food">Food</option>
+            <option value="Education">Education</option>
+            <option value="Technology">Technology</option>
+            <option value="Social">Social</option>
+            <option value="Other">Other</option>
+          </select>
         </div>
 
-        {/* Date */}
+        <div className="flex items-center border rounded-xl px-4 h-12">
+          <Calendar size={18} className="text-gray-400" />
 
-        <div className="flex items-center justify-between border rounded-xl px-4 h-12 cursor-pointer">
-
-          <div className="flex items-center gap-3">
-
-            <Calendar size={18} className="text-gray-400" />
-
-            <span className="text-gray-500">
-              Date
-            </span>
-
-          </div>
-
-          <ChevronDown size={18} />
-
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="flex-1 outline-none ml-3 bg-transparent"
+          />
         </div>
 
-        {/* Filter */}
-
-        <button className="border rounded-xl h-12 px-6 flex items-center justify-center gap-2 hover:bg-gray-100 transition">
-
+        <button
+          className="border rounded-xl h-12 px-6 flex items-center justify-center gap-2 hover:bg-gray-100 transition"
+        >
           <Filter size={18} />
-
           Filter
-
         </button>
 
       </div>
-
     </section>
   );
 }
