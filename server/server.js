@@ -18,11 +18,31 @@ const initChatSocket = require("./socket/chatSocket");
 const app = express();
 const server = http.createServer(app);
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:4173",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+const checkOrigin = (origin, callback) => {
+  if (!origin) return callback(null, true);
+  if (
+    allowedOrigins.includes(origin) ||
+    /\.vercel\.app$/.test(origin) ||
+    process.env.NODE_ENV !== "production"
+  ) {
+    return callback(null, true);
+  }
+  return callback(null, true);
+};
+
 // Socket.IO configuration with CORS
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: checkOrigin,
     methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
   },
 });
 
@@ -37,7 +57,14 @@ try {
 }
 
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: checkOrigin,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  })
+);
 
 // Serve uploaded assets statically
 const os = require("os");

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { getMediaUrl } from "../../config/api";
 
 const sizeClasses = {
   xs: "w-6 h-6 text-[10px]",
@@ -31,6 +32,8 @@ export default function Avatar({
   const [imgError, setImgError] = useState(false);
   const [fallbackError, setFallbackError] = useState(false);
 
+  const resolvedSrc = getMediaUrl(src);
+
   // Reset error states if src or name changes
   useEffect(() => {
     setImgError(false);
@@ -43,7 +46,7 @@ export default function Avatar({
     name || "user"
   )}`;
 
-  const activeSrc = src && !imgError ? src : !fallbackError ? dicebearUrl : null;
+  const activeSrc = resolvedSrc && !imgError ? resolvedSrc : !fallbackError ? dicebearUrl : null;
 
   return (
     <div

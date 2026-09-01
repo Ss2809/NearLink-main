@@ -152,8 +152,14 @@ const uploadProfilePhoto = async (req, res) => {
       }
     }
 
-    // Construct full URL path
-    const photoUrl = `http://localhost:3000/uploads/avatars/${req.file.filename}`;
+    // Construct full URL path dynamically based on current host
+    const host = req.get("host");
+    const protocol =
+      req.protocol === "https" || req.get("x-forwarded-proto") === "https"
+        ? "https"
+        : "http";
+    const baseUrl = process.env.BASE_URL || `${protocol}://${host}`;
+    const photoUrl = `${baseUrl}/uploads/avatars/${req.file.filename}`;
     user.avatar = photoUrl;
     await user.save();
 
