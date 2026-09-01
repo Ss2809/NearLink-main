@@ -1,6 +1,6 @@
 import { MapPin, Phone, Star, Store, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { calculateDistance } from "../../pages/map";
+import { calculateDistance } from "../../pages/Map";
 
 const categoryThumbnails = {
   Cafe: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500",

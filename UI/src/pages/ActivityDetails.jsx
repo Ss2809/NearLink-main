@@ -31,7 +31,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import EditActivityModal from "../components/Activity/EditActivityModal";
-import { calculateDistance } from "./map";
+import { calculateDistance } from "./Map";
 import Avatar from "../components/common/Avatar";
 import { ACTIVITY_API_URL } from "../config/api";
 

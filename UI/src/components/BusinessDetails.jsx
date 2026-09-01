@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 import BusinessModal from "./business/BusinessModal";
-import { calculateDistance } from "../pages/map";
+import { calculateDistance } from "../pages/Map";
 import { BUSINESS_API_URL } from "../config/api";
 
 // Fix default Leaflet marker icons
