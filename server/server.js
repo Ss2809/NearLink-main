@@ -40,7 +40,12 @@ app.use(express.json());
 app.use(cors());
 
 // Serve uploaded assets statically
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+const os = require("os");
+const isVercel = Boolean(process.env.VERCEL);
+const staticUploadsDir = isVercel
+  ? path.join(os.tmpdir(), "uploads")
+  : path.join(__dirname, "uploads");
+app.use("/uploads", express.static(staticUploadsDir));
 
 // Eagerly initiate DB connection (without blocking startup)
 connectDB().catch((err) => {
