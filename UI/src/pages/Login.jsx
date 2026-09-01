@@ -140,13 +140,12 @@ function Login() {
               <label className="text-xs font-semibold text-slate-300">
                 Password
               </label>
-              <button
-                type="button"
-                onClick={() => toast("Password reset feature coming soon!", { icon: "🔒" })}
-                className="text-xs text-green-400 hover:text-green-300 transition"
+              <Link
+                to="/forgot-password"
+                className="text-xs text-green-400 hover:text-green-300 transition font-medium"
               >
-                Forgot?
-              </button>
+                Forgot password?
+              </Link>
             </div>
 
             <div
