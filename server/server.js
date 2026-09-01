@@ -48,15 +48,15 @@ connectDB().catch((err) => {
 });
 
 // Root & Health Endpoints
-app.get("/", (req, res) => {
+app.get(["/", "/api", "/api/"], (req, res) => {
   res.status(200).json({
     success: true,
     message: "NearLink Backend is running",
   });
 });
 
-app.get("/api/health", (req, res) => {
-  res.json({
+app.get(["/api/health", "/health"], (req, res) => {
+  res.status(200).json({
     status: "ok",
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
@@ -65,7 +65,13 @@ app.get("/api/health", (req, res) => {
 
 // Serverless DB Connection Middleware for API routes
 app.use(async (req, res, next) => {
-  if (req.path === "/" || req.path === "/api/health") {
+  if (
+    req.path === "/" ||
+    req.path === "/api" ||
+    req.path === "/api/" ||
+    req.path === "/api/health" ||
+    req.path === "/health"
+  ) {
     return next();
   }
 
